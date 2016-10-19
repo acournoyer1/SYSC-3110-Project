@@ -1,8 +1,8 @@
-import java.util.LinkedList;
+import java.util.*;
 
 public class Node {
 	private String name;
-	private LinkedList<Connection> connections;
+	private HashSet<Node> connections;
 	
 	
 	
@@ -28,19 +28,29 @@ public class Node {
 
 
 
-	public LinkedList<Connection> getConnections() {
+	public HashSet<Node> getConnections() {
 		return connections;
 	}
 
-
-
-	public void setConnections(LinkedList<Connection> connections) {
-		this.connections = connections;
+	public void addConnection(Node n)
+	{
+		connections.add(n);
+		n.connections.add(this);
 	}
 
 	public String getDetails()
 	{
-		return "Node [Name = " + name + ", connection 1 = " + connections.getFirst() + " and connection 2 = " + connections.getLast() + "]\n";
+		String s = "Name: = " + name + "\n"
+				+ "\tConnections: ";
+		if(connections.size() == 0) return s + "no connections.";
+		else
+		{
+			for(Node n: connections)
+			{
+				s += n.name + " ";
+			}
+		    return s;
+		}
 	}
 
 	@Override
