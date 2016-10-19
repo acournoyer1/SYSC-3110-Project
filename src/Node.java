@@ -11,9 +11,7 @@ public class Node {
 	 * held in a linkedList
 	 */
 	public Node(String name){
-		
 		this.name = name;
-		
 	}
 
 
@@ -40,11 +38,14 @@ public class Node {
 		this.connections = connections;
 	}
 
-
+	public String getDetails()
+	{
+		return "Node [Name = " + name + ", connection 1 = " + connections.getFirst() + " and connection 2 = " + connections.getLast() + "]\n";
+	}
 
 	@Override
 	public String toString() {
-		return "Node [Name = " + name + ", connection 1 = " + connections.getFirst() + " and connection 2 = " + connections.getLast() + "]\n";
+		return name;
 	}
 	
 	
