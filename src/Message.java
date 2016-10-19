@@ -10,12 +10,12 @@ public class Message {
 	 * Iterates over a simulation process depending on the type of
 	 * simulation selected
 	 */
-	public Message(){
-		
-	}
+	
 	
 	public Message(Node src, Node dest){
-		
+		this.src = src;
+		this.dest = dest;
+		count = 0;
 		
 	}
 	
@@ -25,17 +25,12 @@ public class Message {
 		return src;
 	}
 	
-	public void setSrc(Node src) {
-		this.src = src;
-	}
 	
 	public Node getDest() {
 		return dest;
 	}
 	
-	public void setDest(Node dest) {
-		this.dest = dest;
-	}
+	
 	
 	public int getCount() {
 		return count;
