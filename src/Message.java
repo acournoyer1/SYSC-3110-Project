@@ -5,6 +5,11 @@ public class Message {
 	private int count;
 	
 	
+	
+	/*
+	 * Iterates over a simulation process depending on the type of
+	 * simulation selected
+	 */
 	public Message(){
 		
 	}
@@ -34,6 +39,10 @@ public class Message {
 	
 	public int getCount() {
 		return count;
+	}
+	
+	public void incCount() {
+		count++;
 	}
 	
 }

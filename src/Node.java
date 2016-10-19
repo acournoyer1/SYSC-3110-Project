@@ -6,6 +6,10 @@ public class Node {
 	
 	
 	
+	/*
+	 * Create a node that has connections to other nodes 
+	 * held in a linkedList
+	 */
 	public Node(String name){
 		
 		this.name = name;
