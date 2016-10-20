@@ -36,6 +36,14 @@ public class Simulation {
 		listMessages.add(msg);
 	}
 	
+	public void clear()
+	{
+		listNodes.clear();
+		messageJumps.clear();
+		listMessages.clear();
+		connections.clear();
+	}
+	
 	public int getMessageListSize()
 	{
 		return listMessages.size();
@@ -87,14 +95,16 @@ public class Simulation {
 		connections.add(new Connection(n1, n2));
 	}
 	
-	public void removeConnection(Node n1, Node n2)
+	public boolean removeConnection(Node n1, Node n2)
 	{
 		Connection toRemove = null;
+		boolean removed = false;
 		for(Connection c: connections)
 		{
 			if(c.contains(n1) && c.contains(n2))
 			{
 				toRemove = c;
+				removed = true;
 			}
 		}
 		if(!(toRemove == null))
@@ -102,6 +112,7 @@ public class Simulation {
 			connections.remove(toRemove);
 			n1.disconnect(n2);
 		}
+		return removed;
 	}
 	
 	public ArrayList<Connection> getConnections()
@@ -139,14 +150,22 @@ public class Simulation {
 					Node currentNode = iter.next();
 					msg.appendPath(currentNode);
 					msg.incCount();
+			
+					String s = "Message " + msg.getId() + " has moved to " + currentNode.getName();
 					
-					statusWindow.append("Message " + msg.getId() + " has moved to " + currentNode.getName() + ".\n");
-					
-					if(msg.getDest().equals(currentNode)) reachedDestination.add(msg);
+					if(msg.getDest().equals(currentNode))
+					{
+						reachedDestination.add(msg);
+						s += ", and has reached its destination.\n";
+					}
+					else
+					{
+						s += ".\n";
+					}
+					statusWindow.append(s);
 				}
 				for(Message msg: reachedDestination)
 				{
-					statusWindow.append("Message " + msg.getId() + " has reached its destination, " + msg.getDest().getName() +".\n");
 					listMessages.remove(msg);
 					messageJumps.add(msg.getCount());
 				}

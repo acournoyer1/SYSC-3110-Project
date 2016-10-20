@@ -14,8 +14,10 @@ public class GUI extends JFrame{
 	private JMenuItem removeNode;
 	private JMenuItem removeConnection;
 	private JMenuItem viewNode;
+	private JMenuItem viewAllNodes;
 	private JMenuItem viewAverage;
 	private JMenuItem randomType;
+	private JMenuItem clearSim;
 	private JCheckBoxMenuItem viewCommand;
 	private JTextField commandField;
 	private JTextArea statusWindow;
@@ -39,10 +41,12 @@ public class GUI extends JFrame{
 		removeNode = new JMenuItem("Node");
 		removeConnection = new JMenuItem("Connection");
 		viewNode = new JMenuItem("Node");
+		viewAllNodes = new JMenuItem("All Nodes");
 		viewAverage = new JMenuItem("Average");
 		statusWindow = new JTextArea();
 		stepButton = new JButton("Step");
 		randomType = new JMenuItem("Random");
+		clearSim = new JMenuItem("Clear Simulation");
 		viewCommand = new JCheckBoxMenuItem("Command Line", false);
 		viewCommand.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.CTRL_DOWN_MASK));
 		commandField = new JTextField();
@@ -50,16 +54,19 @@ public class GUI extends JFrame{
 		parser = new CommandParser();
 		sim = new Simulation(statusWindow);
 		
+		JMenu fileMenu = new JMenu("File");
 		JMenu addMenu = new JMenu("Add");
 		JMenu removeMenu = new JMenu("Remove");
 		JMenu viewMenu = new JMenu("View");
 		JMenu simulationMenu = new JMenu("Simulation");
 		JMenu typeMenu = new JMenu("Set type");
 		JMenu viewToolbars = new JMenu("Toolbars");
+		jMenuBar.add(fileMenu);
 		jMenuBar.add(addMenu);
 		jMenuBar.add(removeMenu);
 		jMenuBar.add(viewMenu);
 		jMenuBar.add(simulationMenu);
+		fileMenu.add(clearSim);
 		addMenu.add(addNode);
 		addMenu.add(addConnection);
 		addMenu.add(addMessage);
@@ -208,25 +215,7 @@ public class GUI extends JFrame{
 			@Override
 			public void actionPerformed(ActionEvent arg0) 
 			{
-				Node a = new Node("A");
-				Node b = new Node("B");
-				Node c = new Node("C");
-				Node d = new Node("D");
-				Node e = new Node("E");
-				
-				sim.addNode(a);
-				sim.addNode(b);
-				sim.addNode(c);
-				sim.addNode(d);
-				sim.addNode(e);
-				
-				sim.addConnection(a, b);
-				sim.addConnection(a, c);
-				sim.addConnection(a, e);
-				sim.addConnection(c, d);
-				sim.addConnection(d, b);
-				sim.addConnection(b, e);
-				
+				buildTest();
 				refresh();
 				statusWindow.append("Test Network has been created.\n");
 			}
@@ -239,6 +228,51 @@ public class GUI extends JFrame{
 				statusWindow.append("The average number of jumps messages have taken is " + sim.average() + ".\n");
 			}
 		});
+		clearSim.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				statusWindow.setText("");
+				sim.clear();
+				refresh();
+				statusWindow.append("Simulation cleared.\n");
+			}
+		});
+		viewAllNodes.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				for(Node n: sim.getNodes())
+				{
+					statusWindow.append(n.getDetails() + "\n");
+				}
+			}
+		});
+	}
+	
+	private void buildTest()
+	{
+		sim.clear();
+		Node a = new Node("A");
+		Node b = new Node("B");
+		Node c = new Node("C");
+		Node d = new Node("D");
+		Node e = new Node("E");
+		
+		sim.addNode(a);
+		sim.addNode(b);
+		sim.addNode(c);
+		sim.addNode(d);
+		sim.addNode(e);
+		
+		sim.addConnection(a, b);
+		sim.addConnection(a, c);
+		sim.addConnection(a, e);
+		sim.addConnection(c, d);
+		sim.addConnection(d, b);
+		sim.addConnection(b, e);
 	}
 	
 	private void refresh()
@@ -330,17 +364,30 @@ public class GUI extends JFrame{
 							+ "\t\tRemoves the connection between the two named nodes.\n"
 							+ "\tVIEW NODE\n"
 							+ "\t\tDisplays all information about a node.\n"
+							+ "\tVIEW ALL\n"
+							+ "\t\tDisplay information about all nodes.\n"
+							+ "\tCLEAR\n"
+							+ "\t\tClears the simulation."
 							+ "\tAVERAGE\n"
 							+ "\t\tDisplays the average number of jumps a message had to take before reaching it's destination.\n"
 							+ "*** All commands are not case sensitive ***\n");
 				}
 				else if(words[0].equalsIgnoreCase("average"))
 				{
-					statusWindow.append("The average number of jumps is \n");
+					statusWindow.append("The average number of jumps messages have taken is " + sim.average() + ".\n");
 				}
 				else if(words[0].equalsIgnoreCase("test"))
 				{
+					buildTest();
+					refresh();
 					statusWindow.append("The test network has been built.\n");
+				}
+				else if(words[0].equalsIgnoreCase("clear"))
+				{
+					sim.clear();
+					refresh();
+					statusWindow.setText("");
+					statusWindow.append("Simulation cleared.\n");
 				}
 				else
 				{
@@ -361,8 +408,17 @@ public class GUI extends JFrame{
 					}
 					else
 					{
-						sim.addNode(new Node(words[2]));
-						statusWindow.append("Node " + words[2] + " has been added.\n");
+						Node n = sim.getNodeByName(words[2]);
+						if(n == null)
+						{
+							sim.addNode(new Node(words[2]));
+							statusWindow.append("Node " + words[2] + " has been added.\n");
+							refresh();
+						}
+						else
+						{
+							statusWindow.append("A node with this name already exists.\n");
+						}
 					}
 				}
 				else if(words[1].equalsIgnoreCase("connection"))
@@ -386,7 +442,9 @@ public class GUI extends JFrame{
 						}
 						else
 						{
-							statusWindow.append("A connection has been added between nodes " + words[2] + " and " + words[3] + ".\n");
+							sim.addConnection(n1, n2);
+							refresh();
+							statusWindow.append("Connection " + words[2] + " < - > " + words[3] + " has been added.\n");
 						}
 					}
 				}
@@ -402,8 +460,20 @@ public class GUI extends JFrame{
 					}
 					else
 					{
-						statusWindow.append("A message has been added that will travel between nodes " + words[2] + " and " + words[3] + ".\n");
-						//actually add the message
+						Node n1 = sim.getNodeByName(words[2]);
+						Node n2 = sim.getNodeByName(words[3]);
+						if(n1 == null || n2 == null)
+						{
+							if(n1 == null) statusWindow.append("The first node named does not exist.\n");
+							if(n2 == null) statusWindow.append("The second node named does not exist.\n");
+						}
+						else
+						{
+							Message msg = new Message(n1, n2);
+							statusWindow.append("Message " + msg.getId() + " : " + words[2] + " - > " + words[3] + " has been added.\n");
+							sim.addMsg(msg);
+							refresh();
+						}
 					}
 				}
 				else
@@ -425,8 +495,14 @@ public class GUI extends JFrame{
 					}
 					else
 					{
-						statusWindow.append("Node " + words[2] + " has been removed.\n");
-						//actually remove the node
+						Node n = sim.getNodeByName(words[2]);
+						if(n == null) statusWindow.append("The node named does not exist.\n");
+						else
+						{
+							sim.removeNode(n);
+							refresh();
+							statusWindow.append("Node " + words[2] + " has been removed.\n");
+						}
 					}
 				}
 				else if(words[1].equalsIgnoreCase("connection"))
@@ -441,8 +517,25 @@ public class GUI extends JFrame{
 					}
 					else
 					{
-						statusWindow.append("A connection has been removed between node " + words[2] + " and " + words[3] + ".\n");
-						//actually remove the connection
+						Node n1 = sim.getNodeByName(words[2]);
+						Node n2 = sim.getNodeByName(words[3]);
+						if(n1 == null || n2 == null)
+						{
+							if(n1 == null) statusWindow.append("The first node named does not exist.\n");
+							if(n2 == null) statusWindow.append("The second node named does not exist.\n");
+						}
+						else
+						{
+							if(sim.removeConnection(n1, n2))
+							{
+								statusWindow.append("Connection " + words[2] + " < - > " + words[3] + " has been removed.\n");
+							}
+							else
+							{
+								statusWindow.append("The specified connection does not exist.\n");
+							}
+							refresh();
+						}
 					}
 				}
 				else
@@ -464,8 +557,26 @@ public class GUI extends JFrame{
 					}
 					else
 					{
-						statusWindow.append("Node " + words[2] + " has been viewed.\n");
-						//actually print the node's info
+						Node n = sim.getNodeByName(words[2]);
+						if(n == null) statusWindow.append("The node named does not exist.\n");
+						else
+						{
+							statusWindow.append(n.getDetails() + "\n");
+						}
+					}
+				}
+				else if(words[1].equalsIgnoreCase("all"))
+				{
+					if(words.length != 2)
+					{
+						statusWindow.append("The view all command should not be followed by more parameters.\n");
+					}
+					else
+					{
+						for(Node n: sim.getNodes())
+						{
+							statusWindow.append(n.getDetails() + "\n");
+						}
 					}
 				}
 			}
@@ -527,8 +638,16 @@ public class GUI extends JFrame{
 				@Override
 				public void actionPerformed(ActionEvent e) 
 				{
-					sim.addNode(new Node(nameField.getText()));
-					statusWindow.append("Node " + nameField.getText() + " has been added.\n");
+					Node n = sim.getNodeByName(nameField.getText());
+					if(n == null)
+					{
+						sim.addNode(new Node(nameField.getText()));
+						statusWindow.append("Node " + nameField.getText() + " has been added.\n");
+					}
+					else
+					{
+						statusWindow.append("A node with this name already exists.\n");
+					}
 					refresh();
 					dispose();
 				}		
