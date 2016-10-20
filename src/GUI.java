@@ -1,6 +1,8 @@
 
 import java.awt.Font;
 import java.awt.event.*;
+import java.util.LinkedList;
+
 import javax.swing.*;
 
 @SuppressWarnings("serial")
@@ -24,10 +26,14 @@ public class GUI extends JFrame{
 	private CommandParser parser;
 	private JScrollPane scrollPane;
 	
+	private LinkedList<Node> nodes;
+	
 	private final Font BOLD_FONT = new Font("Dialog", Font.BOLD, 12);
 	
 	public GUI()
 	{
+		nodes = new LinkedList<Node>();
+		
 		JTextArea t = new JTextArea();
 		t.setEditable(false);
 		JMenuBar jMenuBar = new JMenuBar();
@@ -96,6 +102,7 @@ public class GUI extends JFrame{
 		viewAverage.setEnabled(false);
 		statusWindow.setEditable(false);
 		commandField.setEditable(false);
+		refresh();
 		this.add(split);
 		this.setSize(600, 400);
 		split.setDividerLocation((int)(this.getHeight()*0.75));
@@ -161,7 +168,7 @@ public class GUI extends JFrame{
 					commandSplit.setDividerLocation(30);
 					split.setDividerLocation((int)(GUI.this.getHeight()*0.75));
 					commandField.setFont(BOLD_FONT);
-					commandField.setText(" :");
+					commandField.setText("");
 					commandField.setEditable(true);
 					commandField.requestFocusInWindow();
 				}
@@ -179,21 +186,33 @@ public class GUI extends JFrame{
 			{
 				if(e.getKeyCode() == KeyEvent.VK_ENTER)
 				{
-					parser.parse(commandField.getText().substring(2));
-					commandField.setText(" :");
+					parser.parse(commandField.getText());
+					commandField.setText("");
 				}
 			}	
 		});
 	}
 	
-	public void print(String s)
+	private void refresh()
 	{
-		try {
-			Thread.sleep(500);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		if(nodes.size() < 2)
+		{
+			addConnection.setEnabled(false);
+			addMessage.setEnabled(false);
 		}
-		statusWindow.append(s);
+		else
+		{
+			addConnection.setEnabled(true);
+			addMessage.setEnabled(true);
+		}
+		if(nodes.size() == 0)
+		{
+			removeNode.setEnabled(false);
+		}
+		else
+		{
+			removeNode.setEnabled(true);
+		}
 	}
 	
 	private class CommandParser
@@ -400,6 +419,7 @@ public class GUI extends JFrame{
 			top.setDividerLocation((int)(this.getWidth()*0.35));
 			this.setLocationRelativeTo(null);
 			setUpListeners();
+			addButton.setEnabled(false);
 			this.setVisible(true);
 		}
 		
@@ -418,7 +438,9 @@ public class GUI extends JFrame{
 				@Override
 				public void actionPerformed(ActionEvent e) 
 				{
-					//Actually implement the add
+					nodes.add(new Node(nameField.getText()));
+					statusWindow.append("Node " + nameField.getText() + " has been added.");
+					refresh();
 					dispose();
 				}		
 			});
@@ -426,7 +448,11 @@ public class GUI extends JFrame{
 			{
 				public void keyPressed(KeyEvent e)
 				{
-					if(e.getKeyCode() == KeyEvent.VK_ENTER)
+					if(!(e.getKeyCode() == KeyEvent.VK_ENTER))
+					{
+						addButton.setEnabled(true);
+					}
+					else if(e.getKeyCode() == KeyEvent.VK_ENTER)
 					{
 						addButton.doClick();
 					}
@@ -578,7 +604,7 @@ public class GUI extends JFrame{
 		
 		public RemoveNode()
 		{
-			node = new JComboBox<Node>();
+			node = new JComboBox<Node>(nodes.toArray(new Node[nodes.size()]));
 			removeButton = new JButton("Remove");
 			cancelButton = new JButton("Cancel");
 			
@@ -617,11 +643,11 @@ public class GUI extends JFrame{
 				@Override
 				public void actionPerformed(ActionEvent e) 
 				{
-					//Actually implement the add
+					nodes.remove((Node)node.getSelectedItem());
+					statusWindow.append("Node " + ((Node)node.getSelectedItem()).getName() + " has been removed.");
 					dispose();
 				}		
 			});
-			//Possibly implement enter shortcut
 		}
 	}
 	
@@ -672,7 +698,7 @@ public class GUI extends JFrame{
 				@Override
 				public void actionPerformed(ActionEvent e) 
 				{
-					//Actually implement the add
+					//Actually implement the remove
 					dispose();
 				}		
 			});
@@ -727,7 +753,7 @@ public class GUI extends JFrame{
 				@Override
 				public void actionPerformed(ActionEvent e) 
 				{
-					//Actually implement the add
+					//Actually implement the view
 					dispose();
 				}		
 			});
