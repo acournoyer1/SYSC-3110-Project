@@ -1,4 +1,14 @@
+
+/**
+ * @Author Daman Singh , Ryan Ha
+ * Last Edited Oct 20th 2016
+ * 
+ */
+
 import java.util.LinkedList;
+
+
+
 
 public class Message {
 	private Node dest;
