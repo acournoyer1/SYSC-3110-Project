@@ -1,6 +1,6 @@
 
 public enum SimulationType {
-	random,
-	flood,
-	global
+	RANDOM,
+	FLOOD,
+	GLOBAL
 }
