@@ -24,6 +24,11 @@ public class Connection {
 		return firstNode.toString() + " < - > " + secondNode.toString();
 	}
 	
+	public boolean contains(Node n)
+	{
+		return firstNode == n || secondNode == n;
+	}
+	
 	public boolean equals(Object o)
 	{
 		if(this == o) return true;

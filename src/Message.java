@@ -1,30 +1,36 @@
 import java.util.LinkedList;
 
 public class Message {
-	private Node src;
 	private Node dest;
 	private int count;
 	private LinkedList<Node> nodePath;
+	private int id;
 	
+	private static int idGenerator = 1;
 	
 	public Message(Node src, Node dest){
-		this.src = src;
 		this.dest = dest;
 		count = 0;
 		this.nodePath = new LinkedList<Node>();
+		nodePath.addFirst(src);
+		this.id = idGenerator++;
 	}
 	
 	public void appendPath(Node node){
 		this.nodePath.add(node);
 	}
 	
+	public int getId()
+	{
+		return id;
+	}
 
 	public LinkedList<Node> getPath(){
 		return nodePath;
 	}
 	
 	public Node getSrc() {
-		return src;
+		return nodePath.getFirst();
 	}
 	
 	

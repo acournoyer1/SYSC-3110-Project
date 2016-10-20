@@ -1,7 +1,6 @@
 
 import java.awt.Font;
 import java.awt.event.*;
-import java.util.LinkedList;
 
 import javax.swing.*;
 
@@ -25,17 +24,12 @@ public class GUI extends JFrame{
 	private JSplitPane commandSplit;
 	private CommandParser parser;
 	private JScrollPane scrollPane;
-	
-	private LinkedList<Node> nodes;
+	private Simulation sim;
 	
 	private final Font BOLD_FONT = new Font("Dialog", Font.BOLD, 12);
 	
 	public GUI()
-	{
-		nodes = new LinkedList<Node>();
-		
-		JTextArea t = new JTextArea();
-		t.setEditable(false);
+	{	
 		JMenuBar jMenuBar = new JMenuBar();
 		
 		addNode = new JMenuItem("Node");
@@ -54,6 +48,7 @@ public class GUI extends JFrame{
 		commandField = new JTextField();
 		commandSplit = new JSplitPane();
 		parser = new CommandParser();
+		sim = new Simulation(statusWindow);
 		
 		JMenu addMenu = new JMenu("Add");
 		JMenu removeMenu = new JMenu("Remove");
@@ -156,6 +151,14 @@ public class GUI extends JFrame{
 				new RemoveConnection();
 			}
 		});
+		viewNode.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				new ViewNode();
+			}
+		});
 		viewCommand.addActionListener(new ActionListener()
 		{
 			@Override
@@ -191,27 +194,104 @@ public class GUI extends JFrame{
 				}
 			}	
 		});
+		stepButton.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				sim.step();
+				refresh();
+			}
+		});
+		createTest.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				Node a = new Node("A");
+				Node b = new Node("B");
+				Node c = new Node("C");
+				Node d = new Node("D");
+				Node e = new Node("E");
+				
+				sim.addNode(a);
+				sim.addNode(b);
+				sim.addNode(c);
+				sim.addNode(d);
+				sim.addNode(e);
+				
+				sim.addConnection(a, b);
+				sim.addConnection(a, c);
+				sim.addConnection(a, e);
+				sim.addConnection(c, d);
+				sim.addConnection(d, b);
+				sim.addConnection(b, e);
+				
+				refresh();
+				statusWindow.append("Test Network has been created.\n");
+			}
+		});
+		viewAverage.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				statusWindow.append("The average number of jumps messages have taken is " + sim.average() + ".\n");
+			}
+		});
 	}
 	
 	private void refresh()
 	{
-		if(nodes.size() < 2)
+		if(sim.getNodes().size() < 2)
 		{
 			addConnection.setEnabled(false);
-			addMessage.setEnabled(false);
 		}
 		else
 		{
 			addConnection.setEnabled(true);
-			addMessage.setEnabled(true);
 		}
-		if(nodes.size() == 0)
+		if(sim.getNodes().size() == 0)
 		{
 			removeNode.setEnabled(false);
 		}
 		else
 		{
 			removeNode.setEnabled(true);
+		}
+		if(sim.getConnections().size() == 0)
+		{
+			removeConnection.setEnabled(false);
+			addMessage.setEnabled(false);
+		}
+		else
+		{
+			removeConnection.setEnabled(true);
+			addMessage.setEnabled(true);
+		}
+		if(sim.getNodes().size() == 0)
+		{
+			viewNode.setEnabled(false);
+		}
+		else
+		{
+			viewNode.setEnabled(true);
+		}
+		if(sim.getMessageListSize() == 0)
+		{
+			stepButton.setEnabled(false);
+		}
+		else
+		{
+			stepButton.setEnabled(true);
+		}
+		if(sim.getMessageJumpSize() == 0)
+		{
+			viewAverage.setEnabled(false);
+		}
+		else
+		{
+			viewAverage.setEnabled(true);
 		}
 	}
 	
@@ -281,8 +361,8 @@ public class GUI extends JFrame{
 					}
 					else
 					{
+						sim.addNode(new Node(words[2]));
 						statusWindow.append("Node " + words[2] + " has been added.\n");
-						//actually add the node
 					}
 				}
 				else if(words[1].equalsIgnoreCase("connection"))
@@ -297,8 +377,17 @@ public class GUI extends JFrame{
 					}
 					else
 					{
-						statusWindow.append("A connection has been added between nodes " + words[2] + " and " + words[3] + ".\n");
-						//actually add the node
+						Node n1 = sim.getNodeByName(words[2]);
+						Node n2 = sim.getNodeByName(words[3]);
+						if(n1 == null || n2 == null)
+						{
+							if(n1 == null) statusWindow.append("The first node named does not exist.\n");
+							if(n2 == null) statusWindow.append("The second node named does not exist.\n");
+						}
+						else
+						{
+							statusWindow.append("A connection has been added between nodes " + words[2] + " and " + words[3] + ".\n");
+						}
 					}
 				}
 				else if(words[1].equalsIgnoreCase("message"))
@@ -438,8 +527,8 @@ public class GUI extends JFrame{
 				@Override
 				public void actionPerformed(ActionEvent e) 
 				{
-					nodes.add(new Node(nameField.getText()));
-					statusWindow.append("Node " + nameField.getText() + " has been added.");
+					sim.addNode(new Node(nameField.getText()));
+					statusWindow.append("Node " + nameField.getText() + " has been added.\n");
 					refresh();
 					dispose();
 				}		
@@ -470,8 +559,8 @@ public class GUI extends JFrame{
 		
 		public AddConnection()
 		{
-			firstNode = new JComboBox<Node>();
-			secondNode = new JComboBox<Node>();
+			firstNode = new JComboBox<Node>(sim.getNodes().toArray(new Node[sim.getNodes().size()]));
+			secondNode = new JComboBox<Node>(sim.getNodes().toArray(new Node[sim.getNodes().size()]));
 			addButton = new JButton("Add");
 			cancelButton = new JButton("Cancel");
 			
@@ -511,28 +600,12 @@ public class GUI extends JFrame{
 				@Override
 				public void actionPerformed(ActionEvent e) 
 				{
-					//Actually implement the add
+					sim.addConnection((Node)firstNode.getSelectedItem(), (Node)secondNode.getSelectedItem());
+					statusWindow.append("Connection " + ((Node)firstNode.getSelectedItem()).getName() + " < - > " + ((Node)secondNode.getSelectedItem()).getName() + " has been added.\n");
+					refresh();
 					dispose();
 				}		
 			});
-			firstNode.addActionListener(new ActionListener()
-			{
-				@Override
-				public void actionPerformed(ActionEvent e) 
-				{
-					secondNode.requestFocus();
-				}		
-			});
-			secondNode.addActionListener(new ActionListener()
-			{
-				@Override
-				public void actionPerformed(ActionEvent e) 
-				{
-					addButton.doClick();
-				}		
-			});
-			
-			
 		}
 	}
 	
@@ -545,8 +618,8 @@ public class GUI extends JFrame{
 		
 		public AddMessage()
 		{
-			source = new JComboBox<Node>();
-			destination = new JComboBox<Node>();
+			source = new JComboBox<Node>(sim.getNodes().toArray(new Node[sim.getNodes().size()]));
+			destination = new JComboBox<Node>(sim.getNodes().toArray(new Node[sim.getNodes().size()]));
 			addButton = new JButton("Add");
 			cancelButton = new JButton("Cancel");
 			
@@ -587,8 +660,11 @@ public class GUI extends JFrame{
 			{
 				@Override
 				public void actionPerformed(ActionEvent e) 
-				{
-					//Actually implement the add
+				{	
+					Message msg = new Message((Node)source.getSelectedItem(), (Node)destination.getSelectedItem());
+					sim.addMsg(msg);
+					statusWindow.append("Message " + msg.getId() + ": " + ((Node)source.getSelectedItem()).getName() + " - > " + ((Node)destination.getSelectedItem()).getName() + " has been added.\n");
+					refresh();
 					dispose();
 				}		
 			});
@@ -604,7 +680,7 @@ public class GUI extends JFrame{
 		
 		public RemoveNode()
 		{
-			node = new JComboBox<Node>(nodes.toArray(new Node[nodes.size()]));
+			node = new JComboBox<Node>(sim.getNodes().toArray(new Node[sim.getNodes().size()]));
 			removeButton = new JButton("Remove");
 			cancelButton = new JButton("Cancel");
 			
@@ -643,8 +719,9 @@ public class GUI extends JFrame{
 				@Override
 				public void actionPerformed(ActionEvent e) 
 				{
-					nodes.remove((Node)node.getSelectedItem());
-					statusWindow.append("Node " + ((Node)node.getSelectedItem()).getName() + " has been removed.");
+					sim.removeNode((Node)node.getSelectedItem());
+					statusWindow.append("Node " + ((Node)node.getSelectedItem()).getName() + " has been removed.\n");
+					refresh();
 					dispose();
 				}		
 			});
@@ -659,7 +736,7 @@ public class GUI extends JFrame{
 		
 		public RemoveConnection()
 		{
-			connection = new JComboBox<Connection>();
+			connection = new JComboBox<Connection>(sim.getConnections().toArray(new Connection[sim.getConnections().size()]));
 			removeButton = new JButton("Remove");
 			cancelButton = new JButton("Cancel");
 			
@@ -698,11 +775,11 @@ public class GUI extends JFrame{
 				@Override
 				public void actionPerformed(ActionEvent e) 
 				{
-					//Actually implement the remove
+					sim.removeConnection((Connection)connection.getSelectedItem());
+					statusWindow.append("Connection " + ((Connection)connection.getSelectedItem()).toString() + " has been removed\n.");
 					dispose();
 				}		
 			});
-			//Possibly implement enter shortcut
 		}
 	}
 	
@@ -714,7 +791,7 @@ public class GUI extends JFrame{
 		
 		public ViewNode()
 		{
-			node = new JComboBox<Node>();
+			node = new JComboBox<Node>(sim.getNodes().toArray(new Node[sim.getNodes().size()]));
 			viewButton = new JButton("View");
 			cancelButton = new JButton("Cancel");
 			
@@ -753,7 +830,7 @@ public class GUI extends JFrame{
 				@Override
 				public void actionPerformed(ActionEvent e) 
 				{
-					//Actually implement the view
+					statusWindow.append(((Node)node.getSelectedItem()).getDetails() + "\n");
 					dispose();
 				}		
 			});

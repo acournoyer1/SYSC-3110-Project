@@ -10,28 +10,109 @@ import java.util.Random;
 public class Simulation {
 	private ArrayList<Node> listNodes;
 	private ArrayList<Integer> messageJumps;
-	private GUI gui;
+	private JTextArea statusWindow;
 	private SimulationType type;
 	private ArrayList<Message> listMessages;
+	private ArrayList<Connection> connections;
 	
-	public Simulation(GUI window){
+	public Simulation(JTextArea statusWindow){
 		this.listNodes = new ArrayList<Node>();
 		this.messageJumps = new ArrayList<Integer>();
 		this.listMessages = new ArrayList<Message>();
-		this.gui = window;
+		this.connections = new ArrayList<Connection>();
+		this.statusWindow = statusWindow;
 		
 		//Temporary setup: Type is initialized at random
 		this.type = SimulationType.RANDOM;
 	}
 	
 	/*
-	 * Set the message object that is created by the user to give
+	 * Adds a message object that is created by the user to give
 	 * reference for the simulation.
 	 * 
 	 * @param1 the message object that the user creates
 	 */
-	public void setMsg(Message msg){
+	public void addMsg(Message msg){
 		listMessages.add(msg);
+	}
+	
+	public int getMessageListSize()
+	{
+		return listMessages.size();
+	}
+	
+	public int getMessageJumpSize()
+	{
+		return messageJumps.size();
+	}
+	
+	public ArrayList<Node> getNodes()
+	{
+		return listNodes;
+	}
+	
+	public void addNode(Node n)
+	{
+		listNodes.add(n);
+	}
+	
+	public void removeNode(Node n)
+	{
+		listNodes.remove(n);
+		for(Node node: listNodes)
+		{
+			node.disconnect(n);
+		}
+		LinkedList<Connection> toRemove = new LinkedList<Connection>();
+		for(Connection c: connections)
+		{
+			if(c.contains(n))toRemove.add(c);
+		}
+		connections.removeAll(toRemove);
+	}
+	
+	public Node getNodeByName(String s)
+	{
+		for(Node n: listNodes)
+		{
+			if(n.getName().equals(s)) return n;
+		}
+		return null;
+	}
+	
+	public void addConnection(Node n1, Node n2)
+	{
+		if(n1.equals(n2)) return;
+		n1.connect(n2);
+		connections.add(new Connection(n1, n2));
+	}
+	
+	public void removeConnection(Node n1, Node n2)
+	{
+		Connection toRemove = null;
+		for(Connection c: connections)
+		{
+			if(c.contains(n1) && c.contains(n2))
+			{
+				toRemove = c;
+			}
+		}
+		if(!(toRemove == null))
+		{
+			connections.remove(toRemove);
+			n1.disconnect(n2);
+		}
+	}
+	
+	public ArrayList<Connection> getConnections()
+	{
+		return connections;
+	}
+	
+	public void removeConnection(Connection c)
+	{
+		connections.remove(c);
+		c.getFirstNode().disconnect(c.getSecondNode());
 	}
 	
 	/*
@@ -39,32 +120,37 @@ public class Simulation {
 	 * simulation selected
 	 */
 	public void step(){
-		
-		for(Message msg : this.listMessages){
-			System.out.println(this.type);
 			switch(this.type){
 			//User selected RANDOM step type.
 			case RANDOM:
-				Random nextNode = new Random();
-				System.out.println("Simulation Type Selected: " + this.type);
-				Node refNode = msg.getPath().getLast();
-				HashSet<Node> refPath = refNode.getConnections();
+				ArrayList<Message> reachedDestination = new ArrayList<Message>();
+				for(Message msg : this.listMessages){
+					Random nextNode = new Random();
+					Node refNode = msg.getPath().getLast();
+					HashSet<Node> refPath = refNode.getConnections();
 
-				//Generate a randomly selected node from the hash set
-				int index = nextNode.nextInt(refPath.size());
-				Iterator<Node> iter = refPath.iterator();
-				for (int i = 0; i < index; i++) {
-					iter.next();
+					//Generate a randomly selected node from the hash set
+					int index = nextNode.nextInt(refPath.size());
+					Iterator<Node> iter = refPath.iterator();
+					for (int i = 0; i < index; i++) {
+						iter.next();
+					}
+					//Set the current node reference to a random node that the node is connected to
+					Node currentNode = iter.next();
+					msg.appendPath(currentNode);
+					msg.incCount();
+					
+					statusWindow.append("Message " + msg.getId() + " has moved to " + currentNode.getName() + ".\n");
+					
+					if(msg.getDest().equals(currentNode)) reachedDestination.add(msg);
 				}
-				//Set the current node reference to a random node that the node is connected to
-				Node currentNode = iter.next();
-				msg.appendPath(currentNode);
-				for(Node n : msg.getPath()){
-					System.out.println(n.getDetails());
+				for(Message msg: reachedDestination)
+				{
+					statusWindow.append("Message " + msg.getId() + " has reached its destination, " + msg.getDest().getName() +".\n");
+					listMessages.remove(msg);
+					messageJumps.add(msg.getCount());
 				}
-				msg.incCount();
 				break;
-
 				//To Implement: Flood step type
 			case FLOOD:
 				break;
@@ -73,7 +159,6 @@ public class Simulation {
 				System.out.println("No current type selected!");
 				break;
 			}
-		}
 	}
 	
 	/*
