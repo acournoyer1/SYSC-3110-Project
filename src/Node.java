@@ -43,6 +43,11 @@ public class Node {
 		n.connections.remove(this);
 	}
 
+	
+	/*
+	 * Returns a list of all nodes connected to this node
+	 * 
+	 */
 	public String getDetails()
 	{
 		String s = "Name: " + name + "\n"
