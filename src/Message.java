@@ -1,5 +1,7 @@
 
 /**
+ * Message Class that creates a message to be sent from a node to another node.
+ * 
  * @Author Daman Singh , Ryan Ha
  * Last Edited Oct 20th 2016
  * 
