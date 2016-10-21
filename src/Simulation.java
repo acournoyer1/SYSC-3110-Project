@@ -1,3 +1,11 @@
+/**
+ * Simulation class designated to manage the step process of walking through the simulation.
+ * Manages the ability to manipulate node connections.
+ *
+ * Created by: Ryan Ha
+ * Last Edited by: Alex Cournoyer
+ */
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -36,6 +44,10 @@ public class Simulation {
 		listMessages.add(msg);
 	}
 	
+	/*
+	 * Resets the simulation to default values. Empties the list of nodes,
+	 * connections, and messages.
+	 */
 	public void clear()
 	{
 		listNodes.clear();
@@ -44,26 +56,47 @@ public class Simulation {
 		connections.clear();
 	}
 	
+	/*
+	 * Get the size of the message list.
+	 * 
+	 * @ret an integer representing the number of entries in the messages list
+	 */
 	public int getMessageListSize()
 	{
 		return listMessages.size();
 	}
 	
+	/*
+	 * Gets the number of completed message entries in the list.
+	 *
+	 * @ret an integer containing the size of the message jump list
+	 */
 	public int getMessageJumpSize()
 	{
 		return messageJumps.size();
 	}
 	
+	/*
+	 * Get the list of nodes that are in the simulation currently.
+	 *
+	 * @ret the array list containing the list of nodes.
+	 */
 	public ArrayList<Node> getNodes()
 	{
 		return listNodes;
 	}
 	
+	/*
+	 * Add a node to the simulation.
+	 */
 	public void addNode(Node n)
 	{
 		listNodes.add(n);
 	}
 	
+	/*
+	 * Remove a node from the simulation.
+	 */
 	public void removeNode(Node n)
 	{
 		listNodes.remove(n);
@@ -79,6 +112,12 @@ public class Simulation {
 		connections.removeAll(toRemove);
 	}
 	
+	/*
+	 * Get a node object based off of the name property.
+	 *
+	 * @param1 the name of the node that is being requested
+	 * @ret the node object that has the name specified by param1
+	 */
 	public Node getNodeByName(String s)
 	{
 		for(Node n: listNodes)
@@ -88,6 +127,12 @@ public class Simulation {
 		return null;
 	}
 	
+	/*
+	 * Build a connection between two nodes
+	 *
+	 * @param1 the first node to add a connection to
+	 * @param2 the second node to add a connection to
+	 */
 	public void addConnection(Node n1, Node n2)
 	{
 		if(n1.equals(n2)) return;
@@ -95,6 +140,13 @@ public class Simulation {
 		connections.add(new Connection(n1, n2));
 	}
 	
+	/*
+	 * Remove the connection between two nodes
+	 * 
+	 * @param1 the first node to remove the connection from
+	 * @param2 the second node to remove the connection from
+	 * @ret a boolean variable that describes if the connection is successfully removed
+	 */
 	public boolean removeConnection(Node n1, Node n2)
 	{
 		Connection toRemove = null;
@@ -115,11 +167,21 @@ public class Simulation {
 		return removed;
 	}
 	
+	/*
+	 * Return the list of connections
+	 * 
+	 * @ret the ArrayList object containing all connections
+	 */
 	public ArrayList<Connection> getConnections()
 	{
 		return connections;
 	}
 	
+	/*
+	 * Remove a connection from the simulation. Also removes the connection from the two ndoes.
+	 *
+	 * @param1 the connection object to be removed
+	 */
 	public void removeConnection(Connection c)
 	{
 		connections.remove(c);
@@ -131,53 +193,53 @@ public class Simulation {
 	 * simulation selected
 	 */
 	public void step(){
-			switch(this.type){
-			//User selected RANDOM step type.
-			case RANDOM:
-				ArrayList<Message> reachedDestination = new ArrayList<Message>();
-				for(Message msg : this.listMessages){
-					Random nextNode = new Random();
-					Node refNode = msg.getPath().getLast();
-					HashSet<Node> refPath = refNode.getConnections();
+		switch(this.type){
+		//User selected RANDOM step type.
+		case RANDOM:
+			ArrayList<Message> reachedDestination = new ArrayList<Message>();
+			for(Message msg : this.listMessages){
+				Random nextNode = new Random();
+				Node refNode = msg.getPath().getLast();
+				HashSet<Node> refPath = refNode.getConnections();
 
-					//Generate a randomly selected node from the hash set
-					int index = nextNode.nextInt(refPath.size());
-					Iterator<Node> iter = refPath.iterator();
-					for (int i = 0; i < index; i++) {
-						iter.next();
-					}
-					//Set the current node reference to a random node that the node is connected to
-					Node currentNode = iter.next();
-					msg.appendPath(currentNode);
-					msg.incCount();
-			
-					String s = "Message " + msg.getId() + " has moved to " + currentNode.getName();
-					
-					if(msg.getDest().equals(currentNode))
-					{
-						reachedDestination.add(msg);
-						s += ", and has reached its destination.\n";
-					}
-					else
-					{
-						s += ".\n";
-					}
-					statusWindow.append(s);
+				//Generate a randomly selected node from the hash set
+				int index = nextNode.nextInt(refPath.size());
+				Iterator<Node> iter = refPath.iterator();
+				for (int i = 0; i < index; i++) {
+					iter.next();
 				}
-				for(Message msg: reachedDestination)
+				//Set the current node reference to a random node that the node is connected to
+				Node currentNode = iter.next();
+				msg.appendPath(currentNode);
+				msg.incCount();
+
+				String s = "Message " + msg.getId() + " has moved to " + currentNode.getName();
+
+				if(msg.getDest().equals(currentNode))
 				{
-					listMessages.remove(msg);
-					messageJumps.add(msg.getCount());
+					reachedDestination.add(msg);
+					s += ", and has reached its destination.\n";
 				}
-				break;
-				//To Implement: Flood step type
-			case FLOOD:
-				break;
-
-			default:
-				System.out.println("No current type selected!");
-				break;
+				else
+				{
+					s += ".\n";
+				}
+				statusWindow.append(s);
 			}
+			for(Message msg: reachedDestination)
+			{
+				listMessages.remove(msg);
+				messageJumps.add(msg.getCount());
+			}
+			break;
+			//To Implement: Flood step type
+		case FLOOD:
+			break;
+
+		default:
+			System.out.println("No current type selected!");
+			break;
+		}
 	}
 	
 	/*
